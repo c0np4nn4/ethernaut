@@ -1,125 +1,83 @@
-import { bcs, fromBase64 } from "@mysten/bcs";
+import { bcs, fromBase64, toHex } from '@mysten/bcs';
 
-// BCS에서 사용하는 Transaction 구조체 정의
-const UID = bcs.fixedArray(32, bcs.u8());
+// const UID = bcs.bytes(32).transform({
+//   input: (val: string) => fromBase64(val), // Base64 -> Uint8Array
+//   output: (val: Uint8Array) => toHex(val), // Uint8Array -> Hex string
+// });
+//
 
-export const TransactionBCS = bcs.struct("Transaction", {
-  digest: bcs.string(),
-  transaction: bcs.struct("TransactionData", {
-    data: bcs.struct("Data", {
-      messageVersion: bcs.string(),
-      transaction: bcs.struct("ProgrammableTransaction", {
-        kind: bcs.string(),
-        inputs: bcs.vector(bcs.string()),
-        transactions: bcs.vector(
-          bcs.struct("MoveCall", {
-            package: bcs.string(),
-            module: bcs.string(),
-            function: bcs.string(),
-          })
-        ),
-      }),
-      sender: bcs.string(),
-      gasData: bcs.struct("GasData", {
-        payment: bcs.vector(
-          bcs.struct("Payment", {
-            objectId: bcs.string(),
-            version: bcs.u64(),
-            digest: bcs.string(),
-          })
-        ),
-        owner: bcs.string(),
-        price: bcs.string(),
-        budget: bcs.string(),
-      }),
-    }),
-    txSignatures: bcs.vector(bcs.string()),
-  }),
-  effects: bcs.struct("TransactionEffects", {
-    messageVersion: bcs.string(),
-    status: bcs.struct("Status", {
-      status: bcs.string(),
-    }),
-    executedEpoch: bcs.string(),
-    gasUsed: bcs.struct("GasUsed", {
-      computationCost: bcs.u64(),
-      storageCost: bcs.u64(),
-      storageRebate: bcs.u64(),
-      nonRefundableStorageFee: bcs.u64(),
-    }),
-    modifiedAtVersions: bcs.vector(
-      bcs.struct("ModifiedAtVersion", {
-        objectId: UID,
-        sequenceNumber: bcs.string(),
-      })
-    ),
-    transactionDigest: bcs.string(),
-    created: bcs.vector(
-      bcs.struct("Created", {
-        owner: bcs.struct("Owner", {
-          AddressOwner: bcs.string(),
-        }),
-        reference: bcs.struct("Reference", {
-          objectId: UID,
-          version: bcs.u64(),
-          digest: bcs.string(),
-        }),
-      })
-    ),
-    mutated: bcs.vector(
-      bcs.struct("Mutated", {
-        owner: bcs.struct("Owner", {
-          AddressOwner: bcs.string(),
-        }),
-        reference: bcs.struct("Reference", {
-          objectId: UID,
-          version: bcs.u64(),
-          digest: bcs.string(),
-        }),
-      })
-    ),
-    gasObject: bcs.struct("GasObject", {
-      owner: bcs.struct("Owner", {
-        AddressOwner: bcs.string(),
-      }),
-      reference: bcs.struct("Reference", {
-        objectId: UID,
-        version: bcs.u64(),
-        digest: bcs.string(),
-      }),
-    }),
-    dependencies: bcs.vector(bcs.string()),
-  }),
+// const UID = bcs.string();
+const UID = bcs.fixedArray(66, bcs.string());
+
+
+// Step 2: Owner enum 수정
+const Owner = bcs.enum('owner', {
+  AddressOwner: UID, // AddressOwner는 UID 타입으로 정의
 });
 
-// Base64 디코딩 및 BCS 디코딩 로직
-export function decodeTransactionFromBytes(base64Bytes: string) {
+// Step 3: ObjectRef 구조 정의
+const ObjectRef = bcs.struct('objectRef', {
+  objectId: UID,
+  version: bcs.u64(),
+  digest: bcs.string(),
+});
+
+// Step 4: TransactionEffects 구조 정의
+const GasCostSummary = bcs.struct('gasCostSummary', {
+  computationCost: bcs.u64(),
+  storageCost: bcs.u64(),
+  storageRebate: bcs.u64(),
+  nonRefundableStorageFee: bcs.u64(),
+});
+
+const TransactionEffects = bcs.struct('transactionEffects', {
+  messageVersion: bcs.string(),
+  status: bcs.struct('executionStatus', {
+    status: bcs.string(),
+  }),
+  executedEpoch: bcs.u64(),
+  gasUsed: GasCostSummary,
+  modifiedAtVersions: bcs.vector(
+    bcs.struct('modifiedAtVersion', {
+      objectId: UID,
+      sequenceNumber: bcs.u64(),
+    }),
+  ),
+  transactionDigest: bcs.string(),
+  created: bcs.vector(
+    bcs.struct('created', {
+      owner: Owner,
+      reference: ObjectRef,
+    }),
+  ),
+  mutated: bcs.vector(
+    bcs.struct('mutated', {
+      owner: Owner,
+      reference: ObjectRef,
+    }),
+  ),
+  gasObject: bcs.struct('gasObject', {
+    owner: Owner,
+    reference: ObjectRef,
+  }),
+  dependencies: bcs.vector(bcs.string()),
+});
+
+// Step 5: Base64 파싱 함수 작성
+export function parseTransactionEffects(base64Effects: string) {
   try {
-    // 1. Base64 디코딩
-    const decodedBytes = fromBase64(base64Bytes);
-    console.log("Decoded Base64 Bytes:", decodedBytes);
+    // Base64 디코딩
+    const decodedBytes = fromBase64(base64Effects);
 
-    // 2. BCS 역직렬화
-    const decodedTransaction = TransactionBCS.parse(decodedBytes);
-    console.log("Decoded Transaction Object:", decodedTransaction);
+    console.log(decodedBytes)
 
-    return decodedTransaction;
+    // BCS 디시리얼라이징
+    const effects = TransactionEffects.parse(decodedBytes);
+
+    // 결과 반환
+    return effects;
   } catch (error) {
-    console.error("Error decoding transaction:", error);
+    console.error('Failed to parse TransactionEffects:', error);
     return null;
   }
 }
-
-// 테스트용 직렬화 함수
-export function encodeTransactionToBytes(transaction: any) {
-  try {
-    const encodedBytes = TransactionBCS.serialize(transaction).toBytes();
-    console.log("Encoded Transaction Bytes:", encodedBytes);
-
-    return encodedBytes;
-  } catch (error) {
-    console.error("Error encoding transaction:", error);
-    return null;
-  }
-}
-
