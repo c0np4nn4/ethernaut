@@ -5,6 +5,7 @@ import Challenge_1 from "./Pages/Challenge_1";
 import Challenge_2 from "./Pages/Challenge_2";
 import Challenge_3 from "./Pages/Challenge_3";
 import Challenge_4 from "./Pages/Challenge_4";
+import { ConnectButton } from "@mysten/dapp-kit"; // DAppProvider 추가
 
 function App() {
   return (

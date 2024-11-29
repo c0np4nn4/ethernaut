@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { ConnectButton } from "@mysten/dapp-kit"; // DAppProvider 추가
 
 function Challenge_2() {
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ function Challenge_2() {
       <h1 style={{ fontSize: "2.5rem", marginBottom: "1rem", color: "#FFF" }}>
         📝 Challenge_2 Page
       </h1>
+      <ConnectButton /> {/* 상단에 지갑 연결 UI 추가 */}
 
       <pre
         style={{

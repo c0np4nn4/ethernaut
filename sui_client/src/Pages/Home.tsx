@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Container, Heading, Button, Flex } from "@radix-ui/themes";
 import { buttonBaseStyle, buttonHoverStyle, buttonDefaultStyle } from "../styles/buttonStyles";
+import { ConnectButton } from "@mysten/dapp-kit"; // DAppProvider 추가
 
 
 function Home() {
@@ -30,6 +31,7 @@ function Home() {
       >
         The Suinaut 🚀
       </Heading>
+      <ConnectButton /> {/* 상단에 지갑 연결 UI 추가 */}
       <p
         style={{
           fontFamily: "Inter, sans-serif",
