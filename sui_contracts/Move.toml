@@ -4,14 +4,13 @@ version = "0.1.0"
 authors = ["Your Name <your.email@example.com>"]
 
 [dependencies]
-MoveStdlib = { git = "https://github.com/MystenLabs/sui", subdir = "crates/sui-framework/packages/move-stdlib", rev = "main" }
-Sui = { git = "https://github.com/MystenLabs/sui", subdir = "crates/sui-framework/packages/sui-framework", rev = "main" }
+MoveStdlib = { git = "https://github.com/MystenLabs/sui", subdir = "crates/sui-framework/packages/move-stdlib", rev = "framework/devnet" }
+Sui = { git = "https://github.com/MystenLabs/sui", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/devnet" }
 
 [addresses]
 Ethernaut = "0x1"
-SuiFramework = "0x2"
-MoveStdlib = "0x1"
+MoveStdlib = "0x2"
 
-[dev-addresses]
-Ethernaut = "0x1"
+# [dev-addresses]
+# Ethernaut = "0x1"
 

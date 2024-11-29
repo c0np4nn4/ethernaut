@@ -1,4 +1,4 @@
-module 0x1::ethernaut {
+module 0x0::ethernaut {
 
     use sui::object;
     use sui::table;
